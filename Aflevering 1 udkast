@@ -1,0 +1,87 @@
+# AFLEVERING 1
+
+# IMPORTER NØDVENDIGE FUNKTIONER
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib_venn import venn2
+from datetime import datetime
+
+# VÆLG STARTDAG OG SLUTDAG, HER ER VALGT D. 1 JANUAR 2016 TIL IDAG
+start = datetime.datetime(2016,1,1)
+end   = datetime.utcnow().date()
+
+# HENT DATA FOR DE TRE STØRSTE ENERGI VIRKSOMHEDER I VERDEN MÅLT PÅ MARKEDSKANDELE
+# Den første virksomhed er: Exxon Mobile Corporation
+# Hent data 
+XOM = pandas_datareader.iex.daily.IEXDailyReader('XOM', start, end).read()
+# Slet unødvendige variable
+XOM['Open'].Delete
+XOM['High'].Delete
+XOM['Low'].Delete
+# Tilføj firmanavn som variabel
+XOM['firm'] = 'Exxon Mobile'
+
+# Den anden virksomhed er: Chevron Corporation
+#Hent data
+CVX = pandas_datareader.iex.daily.IEXDailyReader('CVX', start, end).read()
+# Slet unødvendige variable
+CVX['Open'].Delete
+CVX['High'].Delete
+CVX['Low'].Delete
+# Tilføj firmanavn som variabel
+CVX['firm'] = 'Chevron'
+
+# Den tredje virksomhed er: Royal Dutch Shell PLC American Depositary Shares B (Da Royal Dutch har splittet deres aktier i A og B fremstår de som værende mindre)
+# Hent data 
+RDS = pandas_datareader.iex.daily.IEXDailyReader('RDS.B', start, end).read()
+# Slet unødvendige variable
+RDS['Open'].Delete
+RDS['High'].Delete
+RDS['Low'].Delete
+# Tilføj firmanavn som variabel
+RDS['firm'] = 'Shell'
+
+
+# EN SAMLET DATABASE
+# Saml data til en samlet database
+Top3_energy_stocks = pd.concat([XOM,CVX,RDS])
+
+# Konverter dato til at være datetime 
+Top3_energy_stocks.index = pd.to_datetime(Top3_energy_stocks.index)
+
+# Tilføj variabel vedr. ændring fra middelværdien
+Top3_energy_stocks['close_demeaned'] = Top3_energy_stocks.groupby('firm')['close'].transform(lambda x: x - x.mean())
+
+# Tilføj variabel vedr. procentvis ændring
+Top3_energy_stocks['precentage_change'] = ((Top3_energy_stocks.close - Top3_energy_stocks.close.shift(1)) / Top3_energy_stocks.close.shift(1))*100
+
+
+# GRAFER
+# Lav en graf over data over 'closing price'
+fig,ax = plt.subplots()
+Top3_energy_stocks.groupby('firm')['close'].plot(legend=True);
+# MANGLER: Gør det muligt at vælge firmaer med checkbox
+
+# Lav en graf over data over 'close_demeaned'
+Top3_energy_stocks.groupby('firm')['close_demeaned'].plot(legend=True);
+# MANGLER: Gør det muligt at vælge firmaer med checkbox
+
+# Lav en graf over data over 'close_demeaned'
+Top3_energy_stocks.groupby('firm')['percentage_change'].plot(legend=True);
+# MANGLER: Gør det muligt at vælge firmaer med checkbox
+
+# Lav et histogram over antal handlede aktier på hver ugedag
+
+
+# DESKRIPTIV STATISTIK
+
+# Ideer til den deskriptive statistik:
+# - Gennemsnits pris
+# - Gennemsnitlig procentvis stigning (Husk anden formel for gnm. pct. stigning)
+# - Gennemsnitlig antal handlede aktier
+# - Variansen eller std.afvigelse af de tre ovenstående variable
+# - Maks og min af de tre
+# - Antal observationer
+# - Tænker ikke medianen og kvartiler er gode, da slutdag ændres og derfor er median-dagen ikke den samme
+
